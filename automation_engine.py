@@ -33,7 +33,7 @@ SCREENSHOTS_DIR = os.path.join(BASE_DIR, "screenshots")
 os.makedirs(PROFILES_DIR, exist_ok=True)
 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 
-# Google One Offer Tokens (Universal across accounts/currencies)
+# Токены офферов Google One (универсальны для аккаунтов и валют)
 TOK_PRO5TB_12M   = "AVbCH/cspB8VdqKJ+ax/uPxUFAVuYRPX4iSjtg4Fu0PG9zUeURSM7y//LlQva1dCd/rbKVM6EJmyiG/C9BoQ95pMl8yDCHuiwCvM5CuGJME="
 TOK_PRO5TB_6M    = "AVbCH/fUON3w8hpfeutprA3BMQwrBwYIB6Y8CSWi1isDCDswKUUhGQ3dluj5WXsNKOvr8K5UULBGrRsf4KlW1rHLz0fF3SvxQhBFRbBOHCA="
 TOK_PRO5TB_6M_2  = "AVbCH/cJ5SeHgkVRt+bdcrapx/aLSu2kbsBgMdI413zbllDNsNQoC/zVlG/Npbu55WlMzBwWPhUedIvZFDg7fw0CmCv/8DKj04IZ21pK7mrV/hh5"
@@ -227,7 +227,7 @@ def is_port_open(port: int) -> bool:
 
 def parse_proxy_string(raw_proxy: str) -> Optional[Dict[str, Any]]:
     """
-    Parse various proxy formats into {scheme, host, port, username, password}:
+    Разбирает различные форматы прокси в {scheme, host, port, username, password}:
     - http://user:pass@host:port
     - socks5://user:pass@host:port
     - host:port:user:pass
@@ -275,10 +275,10 @@ _FLOPPY_CACHE: Dict[str, str] = {}
 
 def resolve_account_proxy(account: Dict[str, Any], target_region: str, proxy_template: str) -> str:
     """
-    Resolve the proxy string for an account:
-    1. Account-specific proxy overrides global template
-    2. If raw string is a FloppyData API Key (32-char alphanumeric without :/@), auto-fetch subuser credentials
-    3. Global proxy template replaces {country}/{COUNTRY} and {session}/{SESSION} automatically
+    Определяет строку прокси для аккаунта:
+    1. Индивидуальный прокси аккаунта имеет приоритет над глобальным шаблоном
+    2. Если строка — это API-ключ FloppyData (32 символа без :/@), учётные данные субпользователя запрашиваются автоматически
+    3. В глобальном шаблоне {country}/{COUNTRY} и {session}/{SESSION} подставляются автоматически
     """
     raw = (account.get("proxy") or "").strip() or (proxy_template or "").strip()
     if not raw:
@@ -329,10 +329,10 @@ _BLOCKED_PROXY_HOSTS = (
 
 class LocalHttpProxyAuthBridge:
     """
-    Lightweight local asyncio HTTP/HTTPS CONNECT proxy bridge that injects
-    Proxy-Authorization Basic headers, blocks Chrome background telemetry bursts,
-    verifies upstream CONNECT responses, and auto-rotates sticky residential sessions
-    when a residential peer goes offline or drops connections.
+    Лёгкий локальный HTTP/HTTPS CONNECT-прокси на asyncio, который подставляет
+    заголовок Proxy-Authorization Basic, блокирует фоновые телеметрические запросы Chrome,
+    проверяет ответы CONNECT от апстрима и автоматически ротирует «залипающие» сессии
+    резидентного прокси, когда узел уходит в офлайн или рвёт соединение.
     """
 
     def __init__(self, local_port: int, upstream: Dict[str, Any]):
@@ -537,7 +537,7 @@ class GoogleUltraAutomator:
             raise RuntimeError("Задача остановлена пользователем")
 
     async def safe_goto(self, page, url: str, timeout: int = 40000):
-        """Navigate with automatic retry and residential proxy session rotation on transient network errors."""
+        """Переход по URL с автоповтором и ротацией сессии резидентного прокси при временных сетевых ошибках."""
         last_err = None
         for attempt in range(4):
             self.check_stop()
@@ -565,7 +565,7 @@ class GoogleUltraAutomator:
         return get_totp(secret)
 
     async def pass_reauth_on_page(self, page_obj):
-        """Automatically handle Google email + password + 2FA TOTP re-authentication prompts."""
+        """Автоматически проходит повторную аутентификацию Google: почта + пароль + TOTP 2FA."""
         email = self.account.get("email", "")
         password = self.account.get("password", "")
         for _ in range(16):
@@ -672,7 +672,7 @@ class GoogleUltraAutomator:
                             pass
                 continue
 
-            # Check if an open dialog modal (VfPpkd-Sx9Kwc-OWXEXe-FNFY6c) is shown on top of the page
+            # Проверяем, открыт ли поверх страницы модальный диалог (VfPpkd-Sx9Kwc-OWXEXe-FNFY6c)
             open_dialog_btn = page_obj.locator('div.VfPpkd-Sx9Kwc-OWXEXe-FNFY6c button, div.VfPpkd-Sx9Kwc-OWXEXe-FNFY6c [role="button"], div[role="dialog"] button, div[role="dialog"] [role="button"]')
             if await open_dialog_btn.count() > 0:
                 for idx in range(await open_dialog_btn.count()):
@@ -786,7 +786,7 @@ class GoogleUltraAutomator:
                 if "one.google.com" in page.url and "accounts.google.com" not in page.url:
                     break
 
-            # Account chooser check
+            # Проверка выбора аккаунта
             email_lower = email.lower()
             email_clean = email_lower.replace(".", "")
             chooser_items = page.locator("[data-identifier]")
@@ -818,10 +818,10 @@ class GoogleUltraAutomator:
                         await email_loc.first.press("Enter")
                     await asyncio.sleep(4.5)
 
-            # Password + Recovery Email + 2FA
+            # Пароль + резервная почта + 2FA
             await self.pass_reauth_on_page(page)
 
-            # Dismiss post-login prompts
+            # Закрываем подсказки после входа
             for _ in range(4):
                 if "one.google.com" in page.url and "gds.google.com" not in page.url:
                     break
@@ -862,7 +862,7 @@ class GoogleUltraAutomator:
                 if not ids:
                     ids = list(set(re.findall(r'([a-z]{24})\.AO-J1O', html)))
                 if not ids:
-                    # Match 24-char lowercase subscription token inside AF_initDataCallback arrays
+                    # Ищем 24-символьный токен подписки в массивах AF_initDataCallback
                     for blk in re.findall(r'AF_initDataCallback\(\{.*?\}\);', html, flags=re.S):
                         if "subscriptions.red" in blk or "g1." in blk:
                             cand = re.findall(r'\"([a-z]{24})\"', blk)
@@ -887,7 +887,7 @@ class GoogleUltraAutomator:
         return clean
 
     async def ensure_subscription_active(self, page):
-        """If the account has a cancelled subscription ('重新订阅'), click Resubscribe so Mode 5 stacking works."""
+        """Если подписка отменена (на странице видно «重新订阅»), нажимает «Возобновить», чтобы наложение в режиме 5 сработало."""
         await self.safe_goto(page, "https://play.google.com/store/account/subscriptions?hl=zh-CN", timeout=40000)
         await asyncio.sleep(3.5)
         if "accounts.google.com" in page.url or "gds.google.com" in page.url:
@@ -1050,7 +1050,7 @@ class GoogleUltraAutomator:
                     except Exception:
                         pass
 
-            # Also check for open intermediate confirm dialog ("运作方式 -> 继续订阅" / "是的，继续") during the entire wait
+            # В течение всего ожидания проверяем также промежуточный диалог подтверждения («运作方式 -> 继续订阅» / «是的，继续»)
             has_eacquire_frame = any("eacquire" in (f.url or "") for f in frames_to_check)
             if not has_eacquire_frame and (time.time() - last_confirm_click_ts) >= 2.5:
                 try:
@@ -1106,7 +1106,7 @@ class GoogleUltraAutomator:
         target_fr = None
         clean_txt = ""
 
-        # Primary trigger: one.google.com/plans?hl=zh-CN clicking the LAST action button (proven 100% reliable across L1, L2, L3)
+        # Основной триггер: one.google.com/plans?hl=zh-CN — нажимаем ПОСЛЕДНЮЮ кнопку действия (отработано на L1, L2, L3)
         for attempt_url in ("https://one.google.com/plans?hl=zh-CN",) * 5:
             if target_fr:
                 break
@@ -1176,7 +1176,7 @@ class GoogleUltraAutomator:
             self.log(f"⚠️ [{step_tag}] Окно вернуло сообщение об ошибке: {clean_txt[:200]}")
             return False
 
-        # Ensure the configured card (last4) is selected in the eacquire modal if multiple cards exist
+        # Если карт несколько, в окне eacquire выбираем настроенную карту (по последним 4 цифрам)
         card_num_clean = re.sub(r"\s+", "", self.card.get("number", ""))
         target_last4 = card_num_clean[-4:] if len(card_num_clean) >= 4 else ""
         if target_last4 and target_last4 not in clean_txt and ("Mastercard-" in clean_txt or "Visa-" in clean_txt or "PaysafeCard" in clean_txt):
@@ -1202,7 +1202,7 @@ class GoogleUltraAutomator:
             except Exception as pm_err:
                 self.log(f"[{step_tag}] Сообщение при смене карты: {pm_err}")
 
-        # Strict zero-cost protection when running 2-year Pro stacking
+        # Строгая защита от списаний при наложении 2 лет Pro
         if "ultra" not in step_tag.lower() and "0.00" not in clean_txt and "免费" not in clean_txt and "Free" not in clean_txt:
             self.last_subscribe_error = f"Защита от списаний: в окне нет бесплатного пробного периода 0.00 ({clean_txt[:180]})"
             self.log(f"❌ [{step_tag}] {self.last_subscribe_error}")
@@ -1259,7 +1259,7 @@ class GoogleUltraAutomator:
             self.log(f"⚠️ [{step_tag}] Кнопка «Подписаться/Subscribe» не найдена")
             return False
 
-        # Monitor for CVC prompt, Google password re-auth, or post-click error/completion
+        # Отслеживаем запрос CVC, повторную аутентификацию Google и результат после клика
         cvc_code = (self.card.get("cvc") or "").strip()
         acct_pwd = self.account.get("password", "")
         post_click_err = None
@@ -1285,7 +1285,7 @@ class GoogleUltraAutomator:
 
                 if "eacquire" in f2_url or "instrument" in f2_url or "challenge" in f2_url or "accounts.google.com" in f2_url or "reauth" in f2_url:
                     try:
-                        # 1. Check if there is a password input
+                        # 1. Проверяем наличие поля пароля
                         pwd_inp = f2.locator('input[type="password"], input[name="Passwd"]')
                         if await pwd_inp.count() > 0 and await pwd_inp.first.is_visible():
                             is_cvc_box = ("CVC" in f2_txt or "安全码" in f2_txt or "security code" in f2_txt.lower())
@@ -1303,7 +1303,7 @@ class GoogleUltraAutomator:
                                 await asyncio.sleep(3)
                                 continue
 
-                        # 2. Check if there is a 2FA TOTP input
+                        # 2. Проверяем наличие поля кода 2FA (TOTP)
                         totp_inp = f2.locator('input#totpPin, input[name="totpPin"]')
                         if await totp_inp.count() > 0 and await totp_inp.first.is_visible():
                             code = await self.ensure_totp_fresh()
@@ -1314,7 +1314,7 @@ class GoogleUltraAutomator:
                                 await asyncio.sleep(3)
                                 continue
 
-                        # 3. Check if there is a CVC input
+                        # 3. Проверяем наличие поля CVC
                         cvc_inp = f2.locator('input[autocomplete="cc-csc"], input[name="cvc"]')
                         if await cvc_inp.count() == 0 and ("CVC" in f2_txt or "安全码" in f2_txt or "security code" in f2_txt.lower()):
                             cvc_inp = f2.locator('input[type="tel"], input[type="password"]')
@@ -1332,7 +1332,7 @@ class GoogleUltraAutomator:
                             await asyncio.sleep(3)
                             continue
 
-                        # 4. Check if there is a "验证是您本人" / "继续" / "下一步" trigger button without visible inputs
+                        # 4. Проверяем кнопку-триггер «验证是您本人» / «继续» / «下一步» без видимых полей ввода
                         if "验证是您本人" in f2_txt or "验证您的身份" in f2_txt or "Verify it's you" in f2_txt:
                             vbtn = f2.locator('button:has-text("验证"), button:has-text("继续"), button:has-text("下一步"), button:has-text("Verify"), button:has-text("Continue"), button:has-text("Next"), [role="button"]:has-text("验证"), [role="button"]:has-text("继续")').first
                             if await vbtn.count() > 0 and await vbtn.is_visible():
@@ -1425,7 +1425,7 @@ class GoogleUltraAutomator:
             if post_click_err:
                 break
             if wait_i >= 3 and not eacquire_present and not reauth_spinning:
-                # Check main page for "购买失败" toast or "欢迎您！您的新会员已生效" before assuming modal closure result
+                # Проверяем на главной странице всплывающее сообщение «购买失败» или «欢迎您！您的新会员已生效», прежде чем делать вывод о закрытии окна
                 try:
                     main_body_txt = (await page.main_frame.inner_text("body", timeout=2000)).strip()
                 except Exception:
@@ -1588,13 +1588,13 @@ class GoogleUltraAutomator:
                     break
 
             await asyncio.sleep(2.5)
-            # Handle optional retention screen ("不，谢谢" / "继续")
+            # Обрабатываем необязательный экран удержания («不，谢谢» / «继续»)
             no_thanks = page.locator('button:has-text("不，谢谢"), button:has-text("不用了"), button:has-text("No thanks"), [role="button"]:has-text("不，谢谢"), [role="button"]:has-text("不用了")')
             if await no_thanks.count() > 0 and await no_thanks.first.is_visible():
                 await no_thanks.first.click()
                 await asyncio.sleep(2.0)
 
-            # Click visible [role="radio"] (and/or reason text) to enable the "继续" button
+            # Кликаем видимый [role="radio"] (и/или текст причины), чтобы активировать кнопку «继续»
             await page.evaluate(
                 """() => {
                 const radios = Array.from(document.querySelectorAll('[role="radio"], input[type="radio"]')).filter(el => {
@@ -1642,14 +1642,14 @@ class GoogleUltraAutomator:
                 await self.pass_reauth_on_page(page.context.pages[-1])
             await asyncio.sleep(3)
 
-        # Final verification on Play Subscriptions
+        # Финальная проверка на странице подписок Play
         await self.safe_goto(page, "https://play.google.com/store/account/subscriptions?hl=zh-CN", timeout=40000)
         await asyncio.sleep(3.5)
         final_shot = await self.save_screenshot(page, "step5_final_verified")
         final_txt = " | ".join([l.strip() for l in (await page.inner_text("body")).splitlines() if l.strip()])
         self.log(f"Итоговое состояние страницы подписок Play: {final_txt[:400]}")
 
-        # Parse expiry date from final_txt
+        # Извлекаем дату окончания из final_txt
         m_date = re.search(r"(?:取消日期[：:]\s*|续订日期[：:]\s*|将于\s*)([0-9]{4}年[0-9]{1,2}月[0-9]{1,2}日)", final_txt)
         exp_str = m_date.group(1) if m_date else "Активна (см. скриншот)"
         plan_found = "Google AI Pro (5 TB)" if "5 TB" in final_txt else ("Google AI Ultra (20 TB)" if "20 TB" in final_txt else ("Google AI Ultra (30 TB)" if "30 TB" in final_txt else "Google AI Pro"))
@@ -1663,7 +1663,7 @@ class GoogleUltraAutomator:
         )
         self.log(f"🎉 Аккаунт {self.account['email']}: весь цикл «2 года Pro за $0» выполнен! Тариф: {plan_found}, окончание: {exp_str}")
 
-    # Keep step7_cancel_and_verify alias for compatibility
+    # Псевдоним step7_cancel_and_verify сохранён для совместимости
     step7_cancel_and_verify = step5_cancel_and_verify
 
     async def verify_ip_environment(self, page):
@@ -1740,7 +1740,7 @@ class GoogleUltraAutomator:
 
         chrome_args.append("about:blank")
 
-        # Cleanly kill any lingering process listening on self.port
+        # Аккуратно завершаем оставшиеся процессы, слушающие self.port
         try:
             net_out = subprocess.check_output(f"netstat -ano | findstr :{self.port}", shell=True).decode("gbk", errors="ignore")
             for line in net_out.splitlines():

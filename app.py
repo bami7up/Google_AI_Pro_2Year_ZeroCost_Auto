@@ -31,7 +31,7 @@ os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 app = FastAPI(title="Google AI Pro (5 TB) — консоль полной автоматизации: 2 года за US$0.00")
 app.mount("/screenshots", StaticFiles(directory=SCREENSHOTS_DIR), name="screenshots")
 
-# Global runtime state
+# Глобальное состояние во время работы
 LOGS: List[str] = [
     f"[{time.strftime('%H:%M:%S')}] [СИСТЕМА] 🚀 Консоль Google AI Pro (5 TB): 2 года за US$0.00 (-> 10.2028) готова к работе!"
 ]
@@ -193,7 +193,7 @@ async def import_accounts(req: ImportAccountsReq):
     lines = [l.strip() for l in req.raw_text.splitlines() if l.strip()]
     added = 0
     for line in lines:
-        # Support delimiters: ----, —, |, /, \t, comma, or whitespace
+        # Поддерживаемые разделители: ----, —, |, /, \t, запятая или пробелы
         if "----" in line:
             parts = [p.strip() for p in line.split("----") if p.strip()]
         elif "—" in line:
@@ -212,7 +212,7 @@ async def import_accounts(req: ImportAccountsReq):
         if len(parts) < 2:
             continue
 
-        # Detect if first part is a label (no '@') or email (has '@')
+        # Определяем, что идёт первым: метка (без '@') или адрес почты (с '@')
         if "@" in parts[0]:
             email = parts[0]
             password = parts[1]
@@ -404,8 +404,8 @@ MANUAL_BRIDGES: Dict[str, LocalHttpProxyAuthBridge] = {}
 
 def _launch_on_interactive_desktop(args: List[str]):
     """
-    Launch a GUI process (e.g. Chrome) explicitly onto the user's interactive desktop (winsta0\\default)
-    even if the backend server was started inside an isolated/background desktop session (e.g. exebox).
+    Запускает GUI-процесс (например, Chrome) на интерактивном рабочем столе пользователя (winsta0\\default),
+    даже если сервер запущен в изолированной/фоновой сессии рабочего стола (например, exebox).
     """
     if os.name == "nt":
         try:

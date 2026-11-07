@@ -1,0 +1,9 @@
+# Артефакты выполнения
+__pycache__/
+*.pyc
+profiles/
+screenshots/
+
+# Виртуальное окружение
+.venv/
+venv/
